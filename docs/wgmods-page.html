@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FPS, Ping and Lag: WGMods page</title>
+<!--
+  The WGMods page: Mod description and Installation, each with its pictures, ready for one copy and one paste
+  into the WGMods editor (CKEditor 5: it keeps Heading 2, bold, italic, links, lists, quotes and pasted pictures).
+  Open in Edge or Chrome, with internet for the Roboto font of the banners.
+-->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,700;1,400&family=Roboto+Condensed:wght@400;700&display=swap">
+<style>
+/* Colors and type copy the WGMods page, which is dark only. */
+:root {
+  color-scheme: dark;
+  --site-bg: #1c1c1e;
+  --site-text: #b8b8a2;
+  --site-head: #e9e3be;
+  --site-strong: #fefbed;
+  --site-link: #f9b723;
+  --ok: #5fc46a;
+  --f-cond: "Roboto Condensed", "Arial Narrow", Arial, sans-serif;
+  --f-body: Roboto, Arial, sans-serif;
+}
+html, body { margin: 0; }
+body { background: var(--site-bg); color: var(--site-text); font: 16px/25px var(--f-body); }
+.page { max-width: 930px; margin: 0 auto; padding: 36px 16px 60px; }
+.sect { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 28px; }
+.sect h2 { margin: 0; font: 700 18px/18px var(--f-cond); text-transform: uppercase; color: var(--site-head); }
+button { font: 700 12px/1 var(--f-cond); text-transform: uppercase; letter-spacing: .06em; padding: 8px 14px;
+  border-radius: 3px; border: 1px solid var(--site-link); background: transparent; color: var(--site-link); cursor: pointer; }
+button.done { border-color: var(--ok); color: var(--ok); }
+button:focus-visible { outline: 2px solid var(--site-strong); outline-offset: 2px; }
+
+/* What the WGMods CSS does to editor content. */
+.ed { font-family: var(--f-cond); margin-bottom: 56px; }
+.ed p, .ed ul, .ed ol { font-family: var(--f-body); margin: 0 0 25px; padding: 0; }
+.ed ul { list-style: none; }
+.ed ul > li { position: relative; padding-left: 17px; margin-bottom: 25px; }
+.ed ul > li::before { content: ""; position: absolute; left: 2px; top: 11px; width: 4px; height: 4px; border-radius: 50%;
+  background: var(--site-text); opacity: .7; }
+.ed ol { list-style: none; counter-reset: n; }
+.ed ol > li { counter-increment: n; margin-bottom: 25px; }
+.ed ol > li::before { content: counter(n) ". "; font-weight: 700; color: var(--site-strong); }
+.ed ol ul { margin: 12px 0 0; }
+.ed ol ul > li { margin-bottom: 6px; }
+.ed h2 { font: 700 18px/1.35 var(--f-cond); text-transform: uppercase; color: var(--site-head); margin: 0 0 21px; }
+.ed strong { color: var(--site-strong); }
+.ed a { color: var(--site-link); text-decoration: none; }
+.ed a:hover { text-decoration: underline; }
+.ed figure { margin: 0 0 14px; }
+.ed figure canvas { display: block; width: 100%; height: auto; }
+</style>
+</head>
+<body>
+
+<main class="page">
+  <div class="sect"><h2>Mod description</h2><button id="copy-desc" data-block="desc">Copy</button></div>
+  <div class="ed" id="desc"></div>
+  <div class="sect"><h2>Installation</h2><button id="copy-inst" data-block="inst">Copy</button></div>
+  <div class="ed" id="inst"></div>
+</main>
+
+<script>
+const KOFI = "https://ko-fi.com/pavels_b";
+const DISCORD = "https://discord.gg/gCtT9FP9E";
+const ISSUES = "https://github.com/pavel-bolhovitin/wot-fps-ping/issues/new";
+const REPO = "https://github.com/pavel-bolhovitin/wot-fps-ping";
+
+/* Pictures are drawn at 2x, so they stay sharp on the site. */
+const SCALE = 2;
+const COND = '"Roboto Condensed", "Arial Narrow", Arial, sans-serif';
+const BODY = 'Roboto, Arial, sans-serif';
+
+/* ---------- banners: pictures, so nothing on them looks clickable; the links are in the text under them ---------- */
+
+function linksBelow(ctx, color, cy) {
+  ctx.fillStyle = color;
+  ctx.font = `14px ${BODY}`;
+  ctx.textAlign = "right";
+  ctx.fillText("Links below", 872, cy + 5);
+  ctx.textAlign = "left";
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.6;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.beginPath();
+  ctx.moveTo(888, cy - 7); ctx.lineTo(888, cy + 6);
+  ctx.moveTo(882, cy); ctx.lineTo(888, cy + 6); ctx.lineTo(894, cy);
+  ctx.stroke();
+}
+
+function plate(ctx, w, h, fill, stroke) {
+  ctx.beginPath();
+  ctx.roundRect(0.5, 0.5, w - 1, h - 1, 6);
+  ctx.fillStyle = fill;
+  ctx.fill();
+  ctx.strokeStyle = stroke;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+}
+
+const BANNERS = {
+  feedback: {
+    w: 930, h: 118,
+    draw(ctx) {
+      plate(ctx, this.w, this.h, "#222225", "#3a3a36");
+      // crosshair mark
+      ctx.strokeStyle = "#f9b723";
+      ctx.lineWidth = 2;
+      ctx.lineCap = "round";
+      ctx.beginPath(); ctx.arc(41, 45, 8, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(28, 45); ctx.lineTo(32, 45); ctx.moveTo(50, 45); ctx.lineTo(54, 45);
+      ctx.moveTo(41, 32); ctx.lineTo(41, 36); ctx.moveTo(41, 54); ctx.lineTo(41, 58);
+      ctx.stroke();
+      ctx.fillStyle = "#f9b723";
+      ctx.beginPath(); ctx.arc(41, 45, 1.6, 0, Math.PI * 2); ctx.fill();
+      // text
+      ctx.font = `700 24px ${COND}`;
+      ctx.letterSpacing = "0.5px";
+      ctx.fillText("FOUND A BUG? HAVE AN IDEA?", 62, 53);
+      ctx.letterSpacing = "0px";
+      ctx.fillStyle = "#a5a28f";
+      ctx.font = `16px ${BODY}`;
+      ctx.fillText("Write in Discord or create an issue on GitHub.", 30, 84);
+      linksBelow(ctx, "#a5a28f", 80);
+    },
+  },
+  support: {
+    w: 930, h: 98,
+    draw(ctx) {
+      plate(ctx, this.w, this.h, "#252528", "#45443d");
+      // heart mark
+      ctx.save();
+      ctx.translate(30, 27);
+      ctx.scale(0.75, 0.75);
+      ctx.fillStyle = "#d4a032";
+      ctx.fill(new Path2D("M12 21s-7.5-4.6-9.6-9.2C.9 8.3 3 4.5 6.6 4.5c2.1 0 3.6 1.2 5.4 3.2 1.8-2 3.3-3.2 5.4-3.2 "
+        + "3.6 0 5.7 3.8 4.2 7.3C19.5 16.4 12 21 12 21z"));
+      ctx.restore();
+      // text
+      ctx.fillStyle = "#f2ecd0";
+      ctx.font = `700 21px ${COND}`;
+      ctx.fillText("Like the mod?", 56, 44);
+      ctx.fillStyle = "#b0ad98";
+      ctx.font = `15px ${BODY}`;
+      ctx.fillText("You can support it on Ko-fi.", 30, 71);
+      linksBelow(ctx, "#a5a28f", 67);
+    },
+  },
+};
+
+/* ---------- install picture: an SVG with system fonts only, so it also draws as an image ---------- */
+
+const INSTALL_W = 1200, INSTALL_H = 720;
+const UI = '"Segoe UI", Arial, sans-serif';
+
+function installSvg() {
+  const gameFolder = '<tspan class="param">&lt;game folder&gt;</tspan>';
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${INSTALL_W}" height="${INSTALL_H}" viewBox="0 0 ${INSTALL_W} ${INSTALL_H}">
+  <style>
+    text { font-family: ${UI}; fill: #e8e6e1; }
+    .mono { font-family: Consolas, "Courier New", monospace; font-size: 19px; }
+    .title { font-size: 24px; font-weight: 600; }
+    .dim { fill: #8d8a83; }
+    .hl { fill: #f5c542; }
+    .param { font-style: italic; font-weight: 400; fill: #a9a59d; }
+    .step { font-size: 22px; font-weight: 600; fill: #16181c; }
+  </style>
+  <defs>
+    <symbol id="folder" viewBox="0 0 24 20">
+      <path d="M1 3a2 2 0 0 1 2-2h6l2 3h10a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2z" fill="#9c8656"/>
+    </symbol>
+    <symbol id="file" viewBox="0 0 20 24">
+      <path d="M2 1h11l5 5v17H2z" fill="#9fb6d4"/><path d="M13 1v5h5" fill="#6f87a8"/>
+    </symbol>
+    <symbol id="exe" viewBox="0 0 24 24">
+      <rect x="1" y="1" width="22" height="22" rx="4" fill="#b8473a"/>
+      <path d="M6 16l6-9 6 9z" fill="#f0d9a0"/>
+    </symbol>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0L10 5L0 10z" fill="#f5c542"/>
+    </marker>
+  </defs>
+  <rect width="${INSTALL_W}" height="${INSTALL_H}" fill="#16181c"/>
+
+  <!-- 1: the downloaded file -->
+  <rect x="40" y="60" width="480" height="80" rx="14" fill="#202329" stroke="#3a3e46" stroke-width="2"/>
+  <circle cx="74" cy="34" r="18" fill="#f5c542"/><text x="74" y="42" text-anchor="middle" class="step">1</text>
+  <text x="104" y="42" class="title">Download the file</text>
+  <rect x="64" y="80" width="432" height="40" rx="8" fill="none" stroke="#f5c542" stroke-width="2.5"/>
+  <use href="#file" x="78" y="89" width="18" height="22"/>
+  <text x="106" y="107" class="mono hl" font-weight="600">sagtary.fps_ping_<tspan class="param">&lt;version&gt;</tspan>.wotmod</text>
+
+  <!-- 2: copy to mods/<game version> -->
+  <path d="M532 100 C 600 100, 600 196, 668 196" fill="none" stroke="#f5c542" stroke-width="4" marker-end="url(#arrow)"/>
+  <circle cx="598" cy="34" r="18" fill="#f5c542"/><text x="598" y="42" text-anchor="middle" class="step">2</text>
+  <text x="628" y="42" class="title">Copy it to <tspan class="mono hl" font-size="22">mods/<tspan class="param">&lt;game version&gt;</tspan></tspan></text>
+  <text x="560" y="84" class="hl" font-size="20" font-weight="600">copy</text>
+  <rect x="680" y="60" width="440" height="290" rx="14" fill="#202329" stroke="#3a3e46" stroke-width="2"/>
+  <use href="#folder" x="710" y="96" width="30" height="25"/>
+  <text x="752" y="116" class="mono">${gameFolder}</text>
+  <use href="#folder" x="740" y="140" width="26" height="22"/>
+  <text x="778" y="158" class="mono">mods</text>
+  <use href="#folder" x="770" y="184" width="26" height="22"/>
+  <text x="808" y="202" class="mono param">&lt;game version&gt;</text>
+  <rect x="760" y="176" width="338" height="38" rx="8" fill="none" stroke="#f5c542" stroke-width="2.5"/>
+  <use href="#folder" x="740" y="228" width="26" height="22"/>
+  <text x="778" y="246" class="mono dim">res</text>
+  <use href="#exe" x="740" y="270" width="24" height="24"/>
+  <text x="776" y="289" class="mono">WorldOfTanks.exe</text>
+  <text x="710" y="330" class="dim" font-size="18">the folder where WorldOfTanks.exe is</text>
+
+  <!-- 3: check -->
+  <circle cx="74" cy="392" r="18" fill="#f5c542"/><text x="74" y="400" text-anchor="middle" class="step">3</text>
+  <text x="104" y="400" class="title">Check: the file is in the game folder</text>
+  <rect x="40" y="416" width="1080" height="206" rx="14" fill="#202329" stroke="#3a3e46" stroke-width="2"/>
+  <use href="#folder" x="70" y="442" width="30" height="25"/>
+  <text x="112" y="462" class="mono">${gameFolder}</text>
+  <use href="#folder" x="110" y="486" width="26" height="22"/>
+  <text x="148" y="504" class="mono">mods</text>
+  <use href="#folder" x="150" y="530" width="26" height="22"/>
+  <text x="188" y="548" class="mono param">&lt;game version&gt;</text>
+  <use href="#file" x="190" y="574" width="18" height="22"/>
+  <text x="218" y="592" class="mono hl" font-weight="600">sagtary.fps_ping_<tspan class="param">&lt;version&gt;</tspan>.wotmod</text>
+
+  <!-- done -->
+  <circle cx="74" cy="670" r="18" fill="#3fbf4f"/>
+  <path d="M65 670l6 6 12-12" fill="none" stroke="#16181c" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="104" y="678" class="title">Start a battle: FPS, ping and lag are in the top left corner</text>
+</svg>`;
+}
+
+/* ---------- page text ---------- */
+
+const DESC = `<p>FPS, ping and lag in one line in the top left corner of the battle, in place of the game's own panel:</p>
+<ul>
+<li>exact FPS, counted from every frame of the last second;</li>
+<li>ping, the same value as the game's panel;</li>
+<li>lag lamp: green while updates from the server arrive, red when they stop; high ping alone does not make it red;</li>
+<li>hold <strong>Alt</strong>: 30-second graphs of FPS and ping, 1% low FPS and lag ticks, red for each second with lag;</li>
+<li>ping graph in the game's own colors: green up to 59 ms, yellow 60–119 ms, red 120 ms and more;</li>
+<li>in replays: the FPS, ping and lag recorded in the replay.</li>
+</ul>
+<figure data-pic="feedback"><canvas></canvas></figure>
+<p><strong>Bugs and ideas:</strong> <a href="${DISCORD}">Discord</a> · <a href="${ISSUES}">GitHub Issues</a> · <a href="${REPO}">Source code</a></p>
+<p>&nbsp;</p>
+<h2>FAQ</h2>
+<p><strong>1. Why is the FPS different from the game's panel?</strong></p>
+<p>The game's panel shows the average of the last 50 frames, updated every 0.5 s. At 300 FPS that is only about the last third of each half-second, so a short freeze can be missed. This mod counts every frame of the last second.</p>
+<p><strong>2. Why does the ping not change while the lamp is red?</strong></p>
+<p>During lag no new ping measurements arrive, so the game keeps the last value. The lamp is the sign that the ping on the screen is out of date.</p>
+<p><strong>3. What does 1% low mean?</strong></p>
+<p>The FPS of the slowest 1% of the time over the last 30 seconds. <strong>379fps / 237low</strong> means the game mostly runs at 379 FPS but drops to about 237 in short moments.</p>
+<p>&nbsp;</p>
+<figure data-pic="support"><canvas></canvas></figure>
+<p>Support the mod on <a href="${KOFI}">Ko-fi</a>. It is voluntary: the mod is free for everyone, with or without support.</p>`;
+
+const INST = `<figure data-pic="install"><canvas></canvas></figure>
+<ol>
+<li>Download <strong>sagtary.fps_ping_&lt;version&gt;.wotmod</strong>.</li>
+<li>Open <strong>&lt;game folder&gt;</strong>: the folder with <strong>WorldOfTanks.exe</strong>.</li>
+<li>Copy the file into <strong>&lt;game folder&gt;\\mods\\&lt;game version&gt;</strong>. Replace the old version if asked.</li>
+<li>Check that the file is now in place (<strong>&lt;game version&gt;</strong> is a folder such as 2.4.1.1):
+<ul>
+<li>&lt;game folder&gt;\\mods\\&lt;game version&gt;\\<strong>sagtary.fps_ping_&lt;version&gt;.wotmod</strong></li>
+</ul>
+</li>
+<li>Start a battle: FPS, ping and lag are in the top left corner.</li>
+</ol>`;
+
+/* ---------- render ---------- */
+
+const $ = (id) => document.getElementById(id);
+const canvasOf = (key) => document.querySelector(`figure[data-pic="${key}"] canvas`);
+
+function sizeCanvas(c, w, h) {
+  c.width = w * SCALE;
+  c.height = h * SCALE;
+  const ctx = c.getContext("2d");
+  ctx.scale(SCALE, SCALE);
+  return ctx;
+}
+
+function drawBanners() {
+  for (const [key, b] of Object.entries(BANNERS)) b.draw(sizeCanvas(canvasOf(key), b.w, b.h));
+}
+
+function drawInstall() {
+  const img = new Image();
+  img.onload = () => sizeCanvas(canvasOf("install"), INSTALL_W, INSTALL_H).drawImage(img, 0, 0, INSTALL_W, INSTALL_H);
+  img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(installSvg());
+}
+
+/* Clipboard HTML: each picture goes along as an embedded PNG; the editor uploads it on paste. */
+function clipboardHtml(block) {
+  const box = $(block).cloneNode(true);
+  for (const fig of box.querySelectorAll("figure[data-pic]")) {
+    const url = canvasOf(fig.dataset.pic).toDataURL("image/png");
+    fig.outerHTML = `<figure class="image"><img src="${url}" alt=""></figure>`;
+  }
+  return box.innerHTML;
+}
+
+document.addEventListener("click", async (e) => {
+  const btn = e.target.closest("button[data-block]");
+  if (!btn) return;
+  try {
+    const html = clipboardHtml(btn.dataset.block);
+    await navigator.clipboard.write([new ClipboardItem({
+      "text/html": new Blob([html], { type: "text/html" }),
+      "text/plain": new Blob([$(btn.dataset.block).innerText], { type: "text/plain" }),
+    })]);
+    btn.textContent = "Copied";
+    btn.classList.add("done");
+    setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("done"); }, 1600);
+  } catch (err) {
+    btn.textContent = "Failed: " + err.name;
+  }
+});
+
+$("desc").innerHTML = DESC;
+$("inst").innerHTML = INST;
+drawInstall();
+// The banners wait for Roboto, so they do not come out in the fallback font.
+Promise.all([document.fonts.load(`700 24px "Roboto Condensed"`), document.fonts.load("16px Roboto")])
+  .catch(() => {}).finally(drawBanners);
+</script>
+</body>
+</html>
